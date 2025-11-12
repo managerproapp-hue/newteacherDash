@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Service, ServiceEvaluation, ReportViewModel, Student } from '../types';
 import { useAppContext } from '../context/AppContext';
 import { XIcon, DownloadIcon, FileTextIcon, UsersIcon } from './icons';
-import { generatePlanningPDF, generateTrackingSheetPDF, generateDetailedStudentServiceReportPDF, generateAllDetailedStudentReportsPDF, generateFullEvaluationReportPDF } from '../services/reportGenerator';
+import { generatePlanningPDF, generateTrackingSheetPDF, generateDetailedStudentServiceReportPDF, generateAllDetailedStudentReportsPDF, generateFullEvaluationReportPDF, generateAnalyticalEvaluationReportPDF } from '../services/reportGenerator';
 
 
 interface ReportsCenterModalProps {
@@ -11,7 +11,7 @@ interface ReportsCenterModalProps {
     onClose: () => void;
 }
 
-type ReportType = 'planning' | 'trackingSheet' | 'detailedStudentReport' | 'fullEvaluation';
+type ReportType = 'planning' | 'trackingSheet' | 'detailedStudentReport' | 'fullEvaluation' | 'analyticalEvaluation';
 
 const REPORTS: { id: ReportType; name: string; description: string }[] = [
     {
@@ -28,6 +28,11 @@ const REPORTS: { id: ReportType; name: string; description: string }[] = [
         id: 'fullEvaluation',
         name: 'Ficha de Evaluación de Servicio',
         description: 'Genera un informe completo con las evaluaciones grupales e individuales de todos los participantes del servicio.'
+    },
+    {
+        id: 'analyticalEvaluation',
+        name: 'Informe Analítico (Profesor)',
+        description: 'Analiza el rendimiento grupal con rankings y colores, e identifica a los alumnos con mejor y peor desempeño.'
     },
     {
         id: 'detailedStudentReport',
@@ -105,6 +110,9 @@ const ReportsCenterModal: React.FC<ReportsCenterModalProps> = ({ service, evalua
                 break;
             case 'fullEvaluation':
                 generateFullEvaluationReportPDF(viewModel);
+                break;
+            case 'analyticalEvaluation':
+                generateAnalyticalEvaluationReportPDF(viewModel);
                 break;
             case 'detailedStudentReport':
                 if (selectedStudentForReport === '__ALL__') {
