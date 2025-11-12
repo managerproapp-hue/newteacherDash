@@ -7,10 +7,13 @@ import {
     SaveIcon,
     ArrowRightLeftIcon,
     MessageCircleIcon,
-    TrendingUpIcon
+    TrendingUpIcon,
+    PrinterIcon
 } from '../components/icons';
 import { calculateStudentPeriodAverages } from '../services/gradeCalculator';
 import GradeTrendChart from '../components/GradeTrendChart';
+import { useAppContext } from '../context/AppContext';
+import { generateStudentFilePDF } from '../services/reportGenerator';
 
 interface FichaAlumnoProps {
   student: Student;
@@ -45,6 +48,7 @@ const calculateSimpleAverage = (grades: Partial<CourseModuleGrades>): string => 
 };
 
 const FichaAlumno: React.FC<FichaAlumnoProps> = ({ student, onBack, entryExitRecords, calculatedGrades, academicGrades, courseGrades, serviceEvaluations, services, onUpdatePhoto, onUpdateStudent }) => {
+  const { teacherData, instituteData } = useAppContext();
   const [isEditing, setIsEditing] = useState(false);
   const [editedStudent, setEditedStudent] = useState<Student>(student);
 
@@ -117,6 +121,18 @@ const FichaAlumno: React.FC<FichaAlumnoProps> = ({ student, onBack, entryExitRec
 
   const finalAverages = useMemo(() => calculateStudentPeriodAverages(academicGrades, calculatedGrades), [academicGrades, calculatedGrades]);
 
+  const handlePrint = () => {
+      generateStudentFilePDF(
+          student,
+          calculatedGrades,
+          academicGrades,
+          courseGrades,
+          timelineEvents,
+          teacherData,
+          instituteData
+      );
+  };
+
   const TimelineIcon: React.FC<{type: TimelineEvent['type']}> = ({ type }) => {
     const baseClass = "w-8 h-8 rounded-full flex items-center justify-center text-white";
     if (type === 'incidencia') return <div className={`${baseClass} bg-orange-500`}><ArrowRightLeftIcon className="w-5 h-5"/></div>;
@@ -147,7 +163,14 @@ const FichaAlumno: React.FC<FichaAlumnoProps> = ({ student, onBack, entryExitRec
                     <button onClick={handleCancel} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 font-semibold">Cancelar</button>
                 </>
             ) : (
-                <button onClick={() => setIsEditing(true)} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition"><PencilIcon className="w-4 h-4 mr-2" />Editar Ficha</button>
+                 <>
+                    <button onClick={handlePrint} className="flex items-center bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition">
+                        <PrinterIcon className="w-4 h-4 mr-2" />Imprimir Ficha
+                    </button>
+                    <button onClick={() => setIsEditing(true)} className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+                        <PencilIcon className="w-4 h-4 mr-2" />Editar Ficha
+                    </button>
+                 </>
             )}
             <button onClick={onBack} className="text-gray-600 hover:text-gray-800 font-medium text-2xl leading-none p-1 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100">&times;</button>
         </div>
@@ -205,7 +228,7 @@ const FichaAlumno: React.FC<FichaAlumnoProps> = ({ student, onBack, entryExitRec
                              <tr>
                                 <td className="px-4 py-2 text-left">MEDIA PONDERADA</td>
                                 {ACADEMIC_EVALUATION_STRUCTURE.periods.map(p => (
-                                    <td key={`avg-${p.key}`} className="px-4 py-2">{finalAverages[p.key]?.toFixed(2) ?? '-'}</td>
+                                    <td key={`avg-${p.key}`} className="px-4 py-2">{finalAverages[p.key as keyof typeof finalAverages]?.toFixed(2) ?? '-'}</td>
                                 ))}
                             </tr>
                         </tfoot>
